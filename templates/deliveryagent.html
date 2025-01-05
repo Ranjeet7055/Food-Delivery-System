@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Delivery Agent Dashboard</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <style>
+    /* General Reset */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #fef6e4;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* Header Section */
+    header {
+      background-color: #ff5722;
+      color: white;
+      padding: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    header h1 {
+      font-size: 2rem;
+      margin: 0.5rem 0;
+    }
+
+    header .header-buttons {
+      display: flex;
+      gap: 1rem;
+      position: relative; /* To position the notification count */
+    }
+
+    header .btn {
+      background-color: white;
+      color: #ff5722;
+      border: none;
+      padding: 0.7rem 1rem;
+      border-radius: 25px;
+      font-size: 1rem;
+      font-weight: bold;
+      text-decoration: none;
+      text-align: center;
+      cursor: pointer;
+      transition: background-color 0.3s, transform 0.3s;
+    }
+
+    header .btn:hover {
+      background-color: #ffd7b5;
+      transform: scale(1.05);
+    }
+        /* Notification Count */
+    .notification-count {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background-color: rgb(11, 131, 7); /* Orange background */
+      color: white;
+      font-size: 0.9rem;
+      text-align: center;
+      line-height: 18px;
+      visibility: hidden; /* Hidden by default */
+    }
+
+    /* Notification Box */
+    .notification-box {
+      position: fixed;
+      top: 17%;
+      right: 2%; 
+      background-color: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      padding: 1rem;
+      width: 250px;
+      display: none;
+      z-index: 1000;
+    }
+
+    .notification-box h4 {
+      font-size: 1.2rem;
+      color: #ff5722;
+      margin-bottom: 1rem;
+    }
+
+    .notification-box ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .notification-box li {
+      padding: 0.5rem;
+      border-bottom: 1px solid #ddd;
+      margin-bottom: 0.5rem;
+      position: relative; /* To position the delete icon */
+    }
+
+    .notification-box li:last-child {
+      border-bottom: none;
+    }
+
+    .notification-actions {
+      margin-top: 0.5rem;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .notification-btn {
+      position: relative;
+    }
+
+    /* Notification Count inside notification-btn */
+    .notification-btn .notification-count {
+      visibility: hidden; /* Hidden by default */
+    }
+    .flash-container {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+        }
+
+        .flash-message {
+            background-color: #f44336;
+            /* Red background for error */
+            color: white;
+            padding: 15px;
+            margin: 10px;
+            border-radius: 5px;
+            text-align: center;
+            font-size: 16px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .flash-message.success {
+            background-color: #4CAF50;
+            /* Green background for success */
+        }
+
+        .flash-message.danger {
+            background-color: #f44336;
+            /* Red background for error */
+        }
+
+        .flash-message p {
+            margin: 0;
+        }
+
+        /* Hide the flash message after 3 seconds */
+        .flash-message {
+            display: block;
+            animation: fadeInOut 3s forwards;
+        }
+
+    
+    .accept-btn, .reject-btn {
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      
+    }
+
+    .accept-btn {
+      background-color: #4caf50;
+      color: white;
+    }
+    .accept-btn:hover {
+      background-color: #45a049; /* Darker green on hover */
+      transform: translateY(-3px); /* Lift effect */
+      box-shadow: 0 8px 14px rgba(76, 175, 80, 0.4); /* Larger shadow on hover */
+    }
+
+    .reject-btn {
+      background-color:rgb(244, 87, 76);
+      color: white;
+    }
+    .reject-btn:hover {
+      background-color: rgb(233, 67, 50); /* Darker red on hover */
+      transform: translateY(-3px); /* Lift effect */
+      box-shadow: 0 8px 14px rgba(244, 87, 76, 0.4); /* Larger shadow on hover */
+    }
+
+    /* Position the delete icon */
+    .delete-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1.2rem;
+      color: #d3d3d3; /* Light gray color */
+      visibility: hidden; /* Hidden by default */
+    }
+
+    .delete-btn:hover {
+      color: #d32f2f;
+    }
+
+    /* View button */
+    .view-btn {
+      background-color:rgb(63, 180, 227);
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      margin-top: 0.5rem; /* Adds space above the button to move it down */
+    }
+
+    .view-btn:hover {
+      background-color:rgb(54, 146, 216);
+      transform: translateY(-3px); /* Lift effect */
+    }
+
+    /* Instructions Section */
+    .instructions {
+      padding: 2rem;
+      margin: 1rem auto;
+      max-width: 1200px;
+      background-color: #ffedcc;
+      border: 2px dashed #ff5722;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .instructions h2 {
+      text-align: center;
+      color: #ff5722;
+      margin-bottom: 1rem;
+    }
+
+    .instructions ul {
+      list-style-type: disc;
+      padding-left: 2rem;
+    }
+
+    .instructions li {
+      font-size: 1rem;
+      margin: 0.5rem 0;
+      color: #444;
+    }
+
+    /* Stats Section */
+    .stats {
+      display: flex;
+      gap: 2rem;
+      justify-content: center;
+      align-items: center;
+      margin: 2rem auto;
+      padding: 1rem;
+      flex-wrap: wrap;
+      max-width: 1200px;
+    }
+
+    .stats .stat-item {
+      background-color: #ffffff;
+      padding: 2rem;
+      border-radius: 10px;
+      text-align: center;
+      width: 300px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s, box-shadow 0.3s;
+      cursor: pointer;
+    }
+
+    .stats .stat-item:hover {
+      transform: scale(1.05);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .stats .stat-item i {
+      font-size: 2.5rem;
+      color: #ff5722;
+      margin-bottom: 1rem;
+    }
+
+    .stats .stat-item h3 {
+      font-size: 1.4rem;
+      margin: 0.5rem 0;
+    }
+
+    .stats .stat-item p {
+      font-size: 1.1rem;
+      color: #666;
+    }
+
+    /* Footer */
+    footer {
+      background-color: #333;
+      color: white;
+      text-align: center;
+      padding: 1rem;
+      margin-top: auto;
+    }
+  </style>
+</head>
+<body>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flash-container">
+        {% for category, message in messages %}
+        <div class="flash-message {{ category }}">
+            <p>{{ message }}</p>
+        </div>
+        {% endfor %}
+    </div>
+    <script>
+        // Automatically hide flash messages after 5 seconds
+        setTimeout(function() {
+            const flashContainer = document.querySelector('.flash-container');
+            if (flashContainer) {
+                flashContainer.style.transition = "opacity 0.5s ease";
+                flashContainer.style.opacity = "0";
+                setTimeout(() => flashContainer.remove(), 500); // Remove after fade-out
+            }
+        }, 5000); // 5 seconds
+    </script>
+    {% endif %}
+    {% endwith %}
+  <header>
+    <h1>Delivery Dashboard</h1>
+    <div class="header-buttons">
+      <a href="{{ url_for('delivery') }}" class="btn">Home</a>
+      <a href="{{ url_for('delivery_status') }}" class="btn">View Orders</a>
+      <a href="{{ url_for('delivery_issue') }}" class="btn">Help Center</a>
+     
+      <button class="btn notification-btn" id="notification-btn">
+        <i class="fas fa-bell"></i> Notifications
+        <div class="notification-count" id="notification-count"></div>
+      </button>
+      
+      <a href="{{ url_for('logout') }}" class="btn">logout</a>
+    </div>
+    
+  </header>
+  <div class="instructions">
+    <h2>Instructions for Delivery Agents</h2>
+    <ul>
+      <li>Always check the order details before proceeding with delivery.</li>
+      <li>Ensure the delivery address is accurate and reachable.</li>
+      <li>Contact the customer if you encounter any issues during delivery.</li>
+      <li>Maintain professionalism and polite communication with customers.</li>
+      <li>Update the delivery status promptly once the order is completed.</li>
+      <li>Keep an eye on your notifications for new updates or orders.</li>
+    </ul>
+  </div>
+  <div class="stats">
+    <div class="stat-item">
+      <i class="fas fa-box"></i>
+      <h3>Total Orders</h3>
+      <p>50</p>
+    </div>
+    <div class="stat-item">
+      <i class="fas fa-clock"></i>
+      <h3>Time Spent</h3>
+      <p>12 hrs</p>
+    </div>
+    <div class="stat-item">
+      <i class="fas fa-wallet"></i>
+      <h3>Income</h3>
+      <p>₹5,000</p>
+    </div>
+  </div>
+
+  <div class="notification-box" id="notification-box">
+    <h4>New Notifications</h4>
+    <ul id="notification-list">
+      <li data-order-id="1234">
+        New delivery assignment for Order #1234
+        <div class="notification-actions">
+          <button class="accept-btn">Accept</button>
+          <button class="reject-btn">Reject</button>
+        </div>
+        <button class="delete-btn" onclick="deleteNotification(this)"><i class="fas fa-trash"></i></button>
+      </li>
+      <li data-order-id="1235">
+        New delivery assignment for Order #1235
+        <div class="notification-actions">
+          <button class="accept-btn">Accept</button>
+          <button class="reject-btn">Reject</button>
+        </div>
+        <button class="delete-btn" onclick="deleteNotification(this)"><i class="fas fa-trash"></i></button>
+      </li>
+    </ul>
+  </div>
+
+  <footer>
+    <p>© 2024 HiFiDelivery</p>
+    <p>Ensure to check notifications regularly for updates on new orders!</p>
+  </footer>
+
+  <script>
+    const notificationBtn = document.getElementById('notification-btn');
+    const notificationBox = document.getElementById('notification-box');
+    const notificationCount = document.getElementById('notification-count');
+
+    // Update the notification count
+    function updateNotificationCount() {
+        const unreadNotifications = document.querySelectorAll('.notification-box li.unread').length;
+        notificationCount.textContent = unreadNotifications;
+        notificationCount.style.visibility = unreadNotifications > 0 ? 'visible' : 'hidden';
+    }
+
+    // Toggle notification box visibility
+    notificationBtn.addEventListener('click', () => {
+        notificationBox.style.display =
+            notificationBox.style.display === 'block' ? 'none' : 'block';
+    });
+
+    // Handle Accept action
+function handleAccept(button) {
+  const notification = button.closest('li');
+  const orderId = notification.getAttribute('data-order-id');
+
+  notification.innerHTML = `Order #${orderId} accepted. 
+     <button class="view-btn" onclick="window.location.href='deliverystatus.html'">View</button>
+      <button class="delete-btn" onclick="deleteNotification(this)">
+          <i class="fas fa-trash"></i>
+      </button>`;
+  notification.style.backgroundColor = '#e8f5e9'; // Green for accepted
+  notification.classList.remove('unread'); // Mark as read
+  // Make the delete button visible
+  const deleteBtn = notification.querySelector('.delete-btn');
+  deleteBtn.style.visibility = 'visible';
+  updateNotificationCount(); // Update count
+}
+
+// Handle Reject action
+function handleReject(button) {
+  const notification = button.closest('li');
+  const orderId = notification.getAttribute('data-order-id');
+
+  notification.innerHTML = `Order #${orderId} rejected. 
+      <button class="delete-btn" onclick="deleteNotification(this)">
+          <i class="fas fa-trash"></i>
+      </button>`;
+  notification.style.backgroundColor = '#ffebee'; // Red for rejected
+  notification.classList.remove('unread'); // Mark as read
+  // Make the delete button visible
+  const deleteBtn = notification.querySelector('.delete-btn');
+  deleteBtn.style.visibility = 'visible';
+  updateNotificationCount(); // Update count
+}
+
+
+    // Delete a notification
+    function deleteNotification(button) {
+        const notification = button.closest('li');
+        notification.remove(); // Remove from DOM
+        updateNotificationCount(); // Update count
+    }
+
+    // Attach listeners for accept and reject buttons
+    function attachNotificationListeners() {
+        document.querySelectorAll('.accept-btn').forEach(button => {
+            button.addEventListener('click', function () {
+                handleAccept(this);
+            });
+        });
+
+        document.querySelectorAll('.reject-btn').forEach(button => {
+            button.addEventListener('click', function () {
+                handleReject(this);
+            });
+        });
+    }
+
+    // Initial setup
+    document.querySelectorAll('.notification-box li').forEach(notification => {
+        notification.classList.add('unread'); // Mark all as unread initially
+    });
+
+    attachNotificationListeners(); // Add event listeners
+    updateNotificationCount(); // Initial count update
+</script>
+
+
+</body>
+</html>

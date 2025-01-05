@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Delivery Agent Dashboard</title>
+  <style>
+    /* Reset & Layout */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      background-color: #fef6e4;
+    }
+
+    header {
+      background-color: #ff5722;
+      color: white;
+      padding: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 1.5rem;
+    }
+
+    header .home-btn {
+      background-color: white;
+      color: #ff5722;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 1rem;
+      text-decoration: none;
+      font-weight: bold;
+      transition: background-color 0.3s;
+    }
+
+    header .home-btn:hover {
+      background-color: #ffd7b5;
+    }
+
+    main {
+      flex: 1;
+      padding: 1rem;
+    }
+
+    .orders {
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      padding: 1rem;
+      background-color: #ffffff;
+      box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .orders h2 {
+      color: #ff5722;
+      font-size: 1.25rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 0.75rem;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+
+    th {
+      background-color: #ff5722;
+      color: white;
+    }
+
+    td {
+      color: #333;
+    }
+
+    button {
+      background-color: #0b74ca;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: #7f9ce5;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 0.25rem 0.5rem;
+      border-radius: 5px;
+      font-size: 0.85rem;
+      font-weight: bold;
+    }
+
+    .status-pending {
+      background-color: #ffcc00;
+      color: #664d00;
+    }
+
+    .status-picked-up {
+      background-color: #00bcd4;
+      color: white;
+    }
+
+    .status-delivered {
+      background-color: #4caf50;
+      color: white;
+    }
+
+    footer {
+      background-color: #333;
+      color: white;
+      text-align: center;
+      padding: 1rem;
+      margin-top: auto;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      table, th, td {
+        display: block;
+      }
+
+      th {
+        display: none;
+      }
+
+      td {
+        margin-bottom: 1rem;
+        border-bottom: 1px solid #ddd;
+        padding: 0.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Delivery Agent Dashboard</h1>
+    <a href="{{ url_for('delivery') }}" class="home-btn">Home</a>
+  </header>
+  <main>
+    <section class="orders">
+      <h2>Assigned Orders</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Order ID</th>
+            <th>Customer Name</th>
+            <th>Phone</th>
+            <th>Address</th>
+            <th>Delivery Instructions</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="orderTable">
+          <!-- Orders will be dynamically added here -->
+        </tbody>
+      </table>
+    </section>
+  </main>
+  <footer>
+    <p>© 2024 HiFiDelivery | Powered by Swiggy Colors</p>
+  </footer>
+  <script>
+    // Mock Data
+    const orders = [
+      { id: 201, name: "Alice Johnson", phone: "123-456-7890", address: "123 Maple St", deliveryInstruction: "Leave at the front door.", status: "Pending" },
+      { id: 202, name: "Bob Smith", phone: "987-654-3210", address: "456 Oak Ave", deliveryInstruction: "Call me upon arrival.", status: "Picked Up" },
+      { id: 203, name: "Charlie Brown", phone: "555-678-1234", address: "789 Pine Rd", deliveryInstruction: "Ring the bell twice.", status: "Delivered" },
+    ];
+
+    // Function to render orders in the table
+    function renderOrders() {
+      const orderTable = document.getElementById("orderTable");
+      orderTable.innerHTML = ""; // Clear the table
+
+      orders.forEach((order, index) => {
+        const row = document.createElement("tr");
+        const statusClass = getStatusClass(order.status);
+
+        row.innerHTML = `
+          <td>${order.id}</td>
+          <td>${order.name}</td>
+          <td>${order.phone}</td>
+          <td>${order.address}</td>
+          <td>${order.deliveryInstruction}</td>
+          <td>
+            <span class="status-badge ${statusClass}">${order.status}</span>
+          </td>
+          <td>
+            <button onclick="updateStatus(${index})">Update Status</button>
+          </td>
+        `;
+        orderTable.appendChild(row);
+      });
+    }
+
+    // Function to map status to badge classes
+    function getStatusClass(status) {
+      switch (status.toLowerCase()) {
+        case "pending":
+          return "status-pending";
+        case "picked up":
+          return "status-picked-up";
+        case "delivered":
+          return "status-delivered";
+        default:
+          return "";
+      }
+    }
+
+    // Function to update the status of an order
+    function updateStatus(orderIndex) {
+      const newStatus = prompt(
+        `Update status for Order ID ${orders[orderIndex].id} (current: ${orders[orderIndex].status})`,
+        "Delivered"
+      );
+      if (newStatus) {
+        orders[orderIndex].status = newStatus;
+        renderOrders();
+      }
+    }
+
+    // Initial render
+    renderOrders();
+  </script>
+</body>
+</html>
